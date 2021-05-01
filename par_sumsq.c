@@ -19,20 +19,19 @@ static pthread_mutex_t mutex5 = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond1 = PTHREAD_COND_INITIALIZER;  
 
 
-// for queue
+// structure for a linked list element
 struct q
-{
- 
+{ 
     int data;
     struct q *next;
 };
 struct q *top = NULL;
 struct q *bottom = NULL;
 
-// for queue
+// creating linked list
 void que(int item)
 {
-    struct q *qptr = malloc(sizeof(struct q));
+    struct q *qptr = malloc(sizeof(struct q)); // allocates memory for a linked list element
     qptr->data = item;
     qptr->next = NULL;
     if (bottom == NULL)
@@ -48,7 +47,7 @@ void que(int item)
 }
 
 
-int pick() // picks an element from the top of the queue
+int pick() // picks an element from the top of the linked list
 {         
     if (top == NULL)
     {
@@ -67,7 +66,7 @@ int pick() // picks an element from the top of the queue
           {
 	          bottom = NULL;
           }
-          free(temp);
+          free(temp); // free ups memory for linked list element
           return data;
      }
 }
@@ -91,7 +90,7 @@ void calculate_square(long number)
 
 
 // function for multiple threads
-void* func_thread(void *tid)
+void* func_thread(void *tid) // tid stands for thread ID
 {
   
   while (true) {
@@ -100,7 +99,7 @@ void* func_thread(void *tid)
 
     while((top == NULL) && (done == false)) 
     {
-      pthread_cond_wait(&cond1, &mutex5);
+      pthread_cond_wait(&cond1, &mutex5); // conditional wait when linked list is empty and no file to read
       
     }
 
@@ -112,32 +111,34 @@ void* func_thread(void *tid)
     }
 
 
-    int number = pick();   
+    int number = pick(); // picking element from the top of the queue  
     pthread_mutex_unlock(&mutex5); 
-    pthread_cond_signal(&cond1);
+    pthread_cond_signal(&cond1); // signal for conditional variable
       
     long the_square = number * number;
     sleep(number);
 
-    //Critical Section 1
+    // critical section 1
     pthread_mutex_lock(&mutex1); // locking mutex1
     sum += the_square;
     pthread_mutex_unlock(&mutex1); // unlocking mutex1
 
+    // critical section 2
     if (number % 2 == 1) {
-      //Critical Section 2
       pthread_mutex_lock(&mutex2); // locking mutex2
       odd++;                       
       pthread_mutex_unlock(&mutex2);// unlocking mutex2
     }
+    
+    // critical section 3
     if (number < min) {
-      //Critical Section 3
       pthread_mutex_lock(&mutex3); // locking mutex3
       min = number;
       pthread_mutex_unlock(&mutex3); // unlocking mutex3
     }
+    
+    // critical section 4
     if (number > max) {
-      //Critical Section 4
       pthread_mutex_lock(&mutex4); // locking mutex4
       max = number;
       pthread_mutex_unlock(&mutex4); // unlocking mutex4
@@ -152,11 +153,10 @@ int main(int argc, char* argv[])
   // check and parse command line options
   if (argc != 3) 
   {
-    printf("Usage: sumsq <infile>\n");
-    exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
   }
-  char *fn = argv[1]; // file name
-  int tnum = atoi(argv[2]); // number of threads
+  char *fn = argv[1]; // reading file name
+  int tnum = atoi(argv[2]); // reading number of threads
 
   
   if(tnum < 1)
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
     }
     fclose(fin);
     
-    // print results
+    // print outputs
     printf("%ld %ld %ld %ld\n", sum, odd, min, max);
     
     // clean up and return
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
       pthread_join(thread_group[i], NULL); // joining pthreads
     }
 
-    // print results
+    // print outputs
     printf("%ld %ld %ld %ld\n", sum, odd, min, max);
       
     // clean up and return
